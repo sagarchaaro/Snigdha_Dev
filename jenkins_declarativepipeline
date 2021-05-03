@@ -1,0 +1,76 @@
+pipeline{
+    agent any
+    stages{
+        stage('Continuous_Download'){
+            steps{
+                script{
+                    try{
+                        git branch: 'main', url: 'https://github.com/sagarchaaro/Maven.git'        
+                    }catch(Exception e){
+                        mail bcc: '', body: 'Declarative Pipeline job is failed...Due to the Git Hub Code Download!!!', cc: '', from: '', replyTo: '', subject: 'Build is Failed due to Download!!!', to: 'aarosagarch@gmail.com'
+                        exit(1)
+                    }
+                }
+                
+            }
+        }
+        stage('Continuous_Build'){
+            steps{
+                script{
+                    try{
+                        sh 'mvn package'    
+                    }catch(Exception e){
+                        mail bcc: '', body: 'Unable to Build the Project...!!!command is mvn pack', cc: '', from: '', replyTo: '', subject: 'Build Failure to Continuous Build stage', to: 'venkatrinku.akhil11@gmail.com'
+						exit(1)
+                    }
+                }
+            }
+        }
+        stage('Continuous_Deployment'){
+            steps{
+				script{
+					try{
+						    sh 'scp /home/ubuntu/.jenkins/workspace/Development/webapp/target/webapp.war ubuntu@172.31.15.20:/var/lib/tomcat9/webapps/pipeapp.war'
+
+					}catch(Exception e){
+						mail bcc: '', body: 'Unable to Deploy the Artifact in QA Server', cc: '', from: '', replyTo: '', subject: 'Build Failure to Continuous Deployment', to: 'spandysama3@gmail.com'
+						exit(1)
+					}
+				}
+                
+            }
+            
+        }
+        stage('Continuous_Testing'){
+            steps{
+				script{
+					try{
+						git branch: 'main', url: 'https://github.com/sagarchaaro/FunctionalTesting.git'
+						sh 'java -jar /home/ubuntu/.jenkins/workspace/Testing/testing.jar'
+					}
+					catch(Exception e){
+						mail bcc: '', body: 'Testing is failed, pls check the logs!!!', cc: '', from: '', replyTo: '', subject: 'Build Failure to Continuous Testing', to: 'aarosagarch@gmail.com'
+						exit(1)
+					}
+				}
+                
+            }
+        }
+		stage('Continuous_Delivery'){
+            steps{
+				script{
+					try{
+						input message: 'waiting for Approval from DM!', submitter: 'srinivas'
+						    sh 'scp /home/ubuntu/.jenkins/workspace/Development/webapp/target/webapp.war ubuntu@172.31.6.217:/var/lib/tomcat9/webapps/pipeprod.war'
+
+					}
+					catch(Exception e){
+						mail bcc: '', body: 'Testing is failed, pls check the logs!!!', cc: '', from: '', replyTo: '', subject: 'Build Failure to Continuous Testing', to: 'aarosagarch@gmail.com'
+						exit(1)
+					}
+				}
+                
+            }
+        }
+    }
+}
