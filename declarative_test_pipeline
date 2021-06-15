@@ -1,0 +1,44 @@
+pipeline
+{
+  agent {node 'master'}
+  stages
+  {
+    stage('ContinuousDownload')
+    {
+      steps
+      {
+        git 'https://github.com/sagarchaaro/Snigdha_Dev.git'
+      }
+    }
+    stage('ContinuousBuild')
+    {
+      steps
+      {
+        sh 'mvn package'
+      }
+    }
+    stage('ContinuousDeployment')
+    {
+      steps
+      {
+        sh 'scp /var/lib/jenkins/workspace/ScriptedPipeline/webapp/target/webapp.war jenkins@172.31.17.21:/var/lib/tomcat9/webapps/qa_dec_pipeline.war'
+      }
+    }
+    stage('ContinuousTesting')
+    {
+      steps
+      {
+        git branch: 'main', url: 'https://github.com/sagarchaaro/FunctionalTesting.git'
+        sh 'java -jar /var/lib/jenkins/workspace/ScriptedPipeline/testing.jar'
+      }
+    }
+    stage('ContinuousTesting')
+    {
+      steps
+      {
+        input message: 'Waiting for approval from DM!', submitter: 'Srinivas'
+        sh 'scp /var/lib/jenkins/workspace/ScriptedPipeline/webapp/target/webapp.war jenkins@172.31.21.34:/var/lib/tomcat9/webapps/prod_dec_pipeline.war'
+      }
+    }
+  }
+}
