@@ -32,7 +32,7 @@ pipeline
         sh 'java -jar /var/lib/jenkins/workspace/ScriptedPipeline/testing.jar'
       }
     }
-    stage('ContinuousTesting')
+    stage('ContinuousDelivery')
     {
       steps
       {
